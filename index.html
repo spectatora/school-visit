@@ -45,15 +45,54 @@ h1,h2,h3{font-weight:800;letter-spacing:-.01em;margin:0}
 
 /* ---------- заглавен екран ---------- */
 #title{
-  position:fixed;inset:0;z-index:30;display:grid;place-items:center;text-align:center;
-  background:linear-gradient(180deg,var(--am) 0%,var(--noon) 100%);padding:4vh 4vw;
+  position:fixed;inset:0;z-index:30;display:grid;place-items:center;text-align:center;overflow:hidden;
+  background:linear-gradient(180deg,#B9DFFF 0%,var(--am) 40%,var(--noon) 100%);padding:4vh 4vw;
 }
-#title .sun{font-size:clamp(60px,14vh,160px);line-height:1}
-#title h1{font-size:clamp(34px,8vh,96px);margin:1vh 0}
-#title .with{font-size:clamp(20px,4vh,46px);font-weight:700}
-#title .job{font-size:clamp(18px,3.2vh,36px);color:var(--muted);margin:1vh 0 3vh;max-width:40ch}
-#title .cap{font-size:clamp(18px,3.2vh,36px);background:var(--paper);display:inline-block;padding:1vh 2.5vw;border-radius:999px;border:4px solid var(--sun);margin-bottom:4vh}
+/* облаци: три кръга, носят се бавно отляво надясно */
+#title .cloud{position:absolute;width:16vw;height:5vw;background:#fff;border-radius:999px;opacity:.9;pointer-events:none;animation:drift linear infinite}
+#title .cloud::before,#title .cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+#title .cloud::before{width:8vw;height:8vw;left:2.5vw;top:-4.5vw}
+#title .cloud::after{width:5.5vw;height:5.5vw;right:2.5vw;top:-2.8vw}
+#title .c1{top:9vh;animation-duration:95s}
+#title .c2{top:26vh;transform:scale(.7);animation-duration:130s;animation-delay:-60s;opacity:.75}
+#title .c3{top:68vh;transform:scale(.55);animation-duration:160s;animation-delay:-110s;opacity:.6}
+@keyframes drift{from{left:-22vw}to{left:105vw}}
+/* стикери от мисиите, леко плаващи */
+#title .sticker{position:absolute;font-size:clamp(34px,7vh,84px);line-height:1;pointer-events:none;opacity:.8;
+  filter:drop-shadow(0 8px 8px rgba(31,42,68,.18));animation:float 6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-16px) rotate(7deg)}}
+#title .s1{left:6vw;top:14vh;animation-delay:-1s}
+#title .s2{right:7vw;top:12vh;animation-delay:-2.5s}
+#title .s3{left:9vw;bottom:16vh;animation-delay:-4s}
+#title .s4{right:9vw;bottom:20vh;animation-delay:-.5s}
+#title .s5{left:22vw;top:6vh;animation-delay:-3s;font-size:clamp(26px,5vh,60px)}
+#title .s6{right:24vw;bottom:8vh;animation-delay:-5s;font-size:clamp(26px,5vh,60px)}
+/* централната карта */
+#title .hero{
+  position:relative;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:4px solid #fff;border-radius:44px;padding:0 4vw 3.5vh;width:min(94vw,1150px);
+  box-shadow:0 30px 80px rgba(31,42,68,.18);
+}
+#title .sun{font-size:clamp(60px,13vh,150px);line-height:1;display:inline-block;margin-top:calc(-.5em);animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+#title h1{font-size:clamp(34px,7.6vh,92px);margin:.5vh 0 0;line-height:1.05}
+#title .with{font-size:clamp(20px,3.8vh,44px);font-weight:700;margin-top:.6vh}
+#title .job{font-size:clamp(17px,2.8vh,32px);color:var(--muted);margin:.8vh auto 0;max-width:40ch}
+/* мини-преглед на пътеката */
+#title .path{display:flex;align-items:flex-start;justify-content:center;margin:2.6vh auto 2.4vh;max-width:100%}
+#title .stop{display:flex;flex-direction:column;align-items:center;gap:.5vh;font-size:clamp(11px,1.9vh,19px);font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+#title .stop i{
+  --s:clamp(40px,7.4vh,80px);font-style:normal;width:var(--s);height:var(--s);border-radius:50%;background:var(--paper);
+  border:4px solid var(--sun);display:grid;place-items:center;font-size:calc(var(--s)*.5);line-height:1;box-shadow:0 5px 0 rgba(31,42,68,.12);
+}
+#title .stop.first i{border-color:var(--ink)}
+#title .stop.last i{border-color:var(--mint)}
+#title .dash{flex:0 1 clamp(14px,3.2vw,56px);min-width:8px;border-top:4px dashed #9BB3D1;margin:calc(clamp(40px,7.4vh,80px)/2 - 2px) .3vw 0}
+#title .cap{font-size:clamp(18px,3.1vh,34px);background:var(--paper);display:inline-block;padding:1vh 2.5vw;border-radius:999px;border:4px solid var(--sun);margin-bottom:2.6vh}
 #title .start-row{display:flex;gap:1.5vw;justify-content:center;flex-wrap:wrap}
+#title .start-row .btn{font-size:clamp(20px,3.6vh,40px);padding:1.6vh 4vw}
+#title .start-row .btn:not(.ghost){animation:pulse 2.4s ease-in-out infinite;box-shadow:0 10px 30px rgba(31,42,68,.3)}
+@keyframes pulse{50%{transform:scale(1.04)}}
 #title .resume-note{color:var(--muted);font-size:clamp(14px,2.4vh,24px);margin:1.5vh 0 0}
 
 /* ---------- пътека ---------- */
@@ -365,14 +404,25 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
   .s-foot{flex-direction:column;align-items:stretch}
   .s-foot .btn{width:100%;text-align:center}
   .s-foot .btn.primary{order:1}
-  #title{overflow:auto;padding:max(4vh,env(safe-area-inset-top)) 6vw max(4vh,env(safe-area-inset-bottom))}
-  #title .sun{font-size:clamp(56px,20vw,96px)}
-  #title h1{font-size:clamp(30px,9vw,42px);margin:1.5vh 0 .5vh}
-  #title .with{font-size:20px}
-  #title .job{font-size:16px;margin:1vh 0 2.5vh}
-  #title .cap{font-size:16px;padding:1vh 5vw;border-width:3px;margin-bottom:3vh}
+  #title{overflow:auto;padding:0 4vw;display:flex;flex-direction:column;align-items:center}
+  #title::before,#title::after{content:"";flex:1 0 max(6vh,env(safe-area-inset-top))}  /* центрира картата, но при тесен екран я оставя скролваема */
+  #title .cloud{width:40vw;height:12vw}
+  #title .cloud::before{width:20vw;height:20vw;left:6vw;top:-11vw}
+  #title .cloud::after{width:14vw;height:14vw;right:6vw;top:-7vw}
+  #title .c3{display:none}
+  #title .sticker{display:none}
+  #title .hero{width:100%;padding:0 4vw 3vh;border-radius:28px;flex:0 0 auto}
+  #title .sun{font-size:clamp(56px,18vw,80px)}
+  #title h1{font-size:clamp(28px,8.5vw,40px);margin:.5vh 0 0}
+  #title .with{font-size:18px}
+  #title .job{font-size:15px;margin:.8vh auto 0}
+  #title .path{margin:2vh auto 1.6vh}
+  #title .stop{font-size:10px;gap:3px}
+  #title .stop i{--s:34px;border-width:3px;box-shadow:0 3px 0 rgba(31,42,68,.12)}
+  #title .dash{flex-basis:10px;min-width:6px;margin-top:15px;border-top-width:3px}
+  #title .cap{font-size:15px;padding:1vh 4vw;border-width:3px;margin-bottom:2vh}
   #title .start-row{flex-direction:column;align-items:stretch;gap:1.2vh}
-  #title .start-row .btn{width:100%;text-align:center}
+  #title .start-row .btn{width:100%;text-align:center;font-size:18px;padding:1.6vh 4vw}
 }
 
 /* --- телефон в пейзаж: всичко малко по-компактно, за да се побере пътеката --- */
@@ -475,17 +525,23 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  #title .cloud{animation:none;left:auto}
+  #title .c1{right:10vw} #title .c2{left:8vw} #title .c3{right:30vw}
 }
 </style>
 </head>
 <body>
 
 <section id="title">
-  <div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <span class="sticker s1">💻</span><span class="sticker s2">🤖</span><span class="sticker s3">🐛</span>
+  <span class="sticker s4">💡</span><span class="sticker s5">☕</span><span class="sticker s6">🚀</span>
+  <div class="hero">
     <div class="sun">☀️</div>
     <h1>Един мой работен ден</h1>
     <div class="with">с <span data-presenter></span></div>
     <p class="job" id="title-job"></p>
+    <div class="path" id="title-path"></div>
     <div class="cap">🎲 Капитан на зара: <span data-captain></span></div>
     <div class="start-row">
       <button class="btn hidden" id="resume-btn">▶ Продължаваме</button>
@@ -763,6 +819,8 @@ function renderNames() {
   $$("[data-captain]").forEach(x => x.textContent = state.captain);
   $$("[data-presenter]").forEach(x => x.textContent = state.presenter);
   $("#title-job").textContent = CONFIG.job;
+  const stops = [{ cls: "first", icon: "⏰", lab: "Старт" }, ...MISSIONS.map(m => ({ cls: "", icon: m.icon, lab: m.time })), { cls: "last", icon: "🏠", lab: "18:00" }];
+  $("#title-path").innerHTML = stops.map(x => `<div class="stop ${x.cls}"><i>${x.icon}</i>${x.lab}</div>`).join(`<div class="dash"></div>`);
 }
 function renderDone() {
   MISSIONS.forEach((m, i) => fieldEl(m.n).classList.toggle("done", state.done.includes(i)));
