@@ -20,6 +20,7 @@
     Esc            връща към пътеката (мисията остава неизпълнена)
     T              телепорт до следващата мисия (ако времето не стига)
     F              цял екран
+    M              звук включен/изключен
 -->
 <style>
 :root{
@@ -442,6 +443,7 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
     <div class="captain">🎲 Капитан: <span data-captain></span></div>
     <div class="ops">
       <span class="timer" id="timer" title="Изминало време">0:00</span>
+      <button id="sound-btn" title="Звук (M)">🔊</button>
       <button id="full-btn" title="Цял екран (F)">⛶</button>
       <button id="settings-btn" title="Настройки на водещия">⚙</button>
     </div>
@@ -475,7 +477,7 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
     <button class="btn ghost" id="s-reset">Започни отначало</button>
     <button class="btn" id="s-close">Готово</button>
   </div>
-  <p class="keys">Клавиши: 1–6 зар, Enter продължи, Esc обратно към пътеката, T телепорт, F цял екран. „Отвори“ до мисия я показва за проба, без да мести фигурката.</p>
+  <p class="keys">Клавиши: 1–6 зар, Enter продължи, Esc обратно към пътеката, T телепорт, F цял екран, M звук. „Отвори“ до мисия я показва за проба, без да мести фигурката.</p>
 </dialog>
 
 <script>
@@ -569,12 +571,82 @@ const fieldEl = n => $(`.field[data-n="${n}"]`);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function fmt(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
 
-let state = { pos: 0, done: [], started: null, captain: CONFIG.captain, presenter: CONFIG.presenter };
+let state = { pos: 0, done: [], started: null, captain: CONFIG.captain, presenter: CONFIG.presenter, sound: true };
 let busy = false;
 let keyHandler = null;      // мисиите могат да прихващат клавиши
 let stageCleanup = null;    // спира таймери при затваряне на сцената
 
 const overlay = $("#overlay"), st = $("#stage"), token = $("#token"), settings = $("#settings");
+
+/* ---------- звуци (Web Audio, без външни файлове) ---------- */
+const SFX = (() => {
+  let ctx = null;
+  function get() {
+    if (!state.sound) return null;
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+  // един тон: f честота, t начало (сек), d дължина, slide — плъзгане към друга честота
+  function tone(c, { f = 440, t = 0, d = .15, type = "sine", g = .22, slide = null }) {
+    const o = c.createOscillator(), a = c.createGain(), at = c.currentTime + t;
+    o.type = type;
+    o.frequency.setValueAtTime(f, at);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, at + d);
+    a.gain.setValueAtTime(0, at);
+    a.gain.linearRampToValueAtTime(g, at + .012);
+    a.gain.exponentialRampToValueAtTime(.001, at + d);
+    o.connect(a).connect(c.destination);
+    o.start(at); o.stop(at + d + .05);
+  }
+  // кратък шум — тракането на зара
+  function click(c, { t = 0, d = .06, g = .25, f = 1800 }) {
+    const n = Math.floor(c.sampleRate * d), b = c.createBuffer(1, n, c.sampleRate), ch = b.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n) ** 2;
+    const src = c.createBufferSource(), fl = c.createBiquadFilter(), a = c.createGain();
+    fl.type = "bandpass"; fl.frequency.value = f; fl.Q.value = .9;
+    src.buffer = b; a.gain.value = g;
+    src.connect(fl).connect(a).connect(c.destination);
+    src.start(c.currentTime + t);
+  }
+  return {
+    unlock() { get(); },                                    // извиква се при първото докосване/клик
+    dice() {                                                // зарът се търкаля и спира
+      const c = get(); if (!c) return;
+      [0, .08, .17, .27, .38].forEach((t, i) => click(c, { t, g: .3 - i * .04, f: 1500 + i * 250 }));
+      tone(c, { f: 880, t: .42, d: .14, type: "triangle", g: .18 });
+    },
+    hop() {                                                 // скок на фигурката
+      const c = get(); if (!c) return;
+      tone(c, { f: 480, slide: 960, d: .13, type: "sine", g: .2 });
+    },
+    fanfare() {                                             // изпълнена мисия
+      const c = get(); if (!c) return;
+      [[523, 0], [659, .11], [784, .22], [1047, .33]].forEach(([f, t]) => tone(c, { f, t, d: .32, type: "triangle", g: .22 }));
+      tone(c, { f: 1047, t: .48, d: .7, type: "triangle", g: .2 });
+      tone(c, { f: 659, t: .48, d: .7, type: "triangle", g: .12 });
+      tone(c, { f: 392, t: .48, d: .7, type: "sine", g: .12 });
+    },
+    finish() {                                              // финал с конфети
+      const c = get(); if (!c) return;
+      const melody = [[523, 0], [523, .12], [523, .24], [659, .36], [784, .6], [659, .84], [784, 1.08]];
+      melody.forEach(([f, t]) => tone(c, { f, t, d: .3, type: "triangle", g: .22 }));
+      [[1047, 1.3], [1319, 1.3], [1568, 1.3]].forEach(([f, t]) => tone(c, { f, t, d: 1.2, type: "triangle", g: .14 }));
+      for (let i = 0; i < 10; i++) tone(c, { f: 1800 + Math.random() * 1600, t: 1.4 + i * .11, d: .12, type: "sine", g: .07 });
+    },
+  };
+})();
+function setSound(on) {
+  state.sound = on; save();
+  const b = $("#sound-btn");
+  b.textContent = on ? "🔊" : "🔇";
+  b.title = on ? "Звук: включен (M)" : "Звук: изключен (M)";
+  if (on) SFX.unlock();
+}
 
 function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 function load() {
@@ -648,12 +720,15 @@ async function roll(n) {
   busy = true;
   if (!state.started) state.started = Date.now();
   pressDie(n);
+  SFX.dice();
   setPrompt("Напред…");
+  await wait(450);                       // зарът се търкаля, после тръгваме
   let p = state.pos;
   for (let i = 0; i < n; i++) {
     p++;
     state.pos = p;
     placeToken(true);
+    SFX.hop();
     save();
     await wait(430);
     const mi = missionAt(p);
@@ -671,6 +746,7 @@ async function teleport() {
   if (!state.started) state.started = Date.now();
   state.pos = target;
   placeToken(true);
+  SFX.hop();
   save();
   await wait(500);
   busy = false;
@@ -713,7 +789,7 @@ function closeStage() {
 function openMission(idx, rehearsal = false) {
   const m = MISSIONS[idx];
   const done = () => {
-    if (!rehearsal && !state.done.includes(idx)) { state.done.push(idx); save(); renderDone(); }
+    if (!rehearsal && !state.done.includes(idx)) { state.done.push(idx); save(); renderDone(); SFX.fanfare(); }
     closeStage();
   };
   m.run(m, done);
@@ -964,6 +1040,7 @@ function missionTrueFalse(m, done) {
 
 /* ---------- финал ---------- */
 function showFinish() {
+  SFX.finish();
   const s = openStage({
     body: `
       <div class="finish">
@@ -1028,6 +1105,7 @@ function bindSettings() {
   $("#s-reset").addEventListener("click", resetGame);
   $("#s-close").addEventListener("click", () => settings.close());
   $("#full-btn").addEventListener("click", toggleFull);
+  $("#sound-btn").addEventListener("click", () => setSound(!state.sound));
 }
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" || settings.open) return;
@@ -1048,6 +1126,7 @@ document.addEventListener("keydown", e => {
   if (d) roll(+d[1]);
   else if (e.code === "KeyT") teleport();
   else if (e.code === "KeyF") toggleFull();
+  else if (e.code === "KeyM") setSound(!state.sound);
 });
 setInterval(() => {
   if (!state.started) return;
@@ -1064,7 +1143,8 @@ renderNames();
 renderDone();
 bindSettings();
 setPrompt();
-$("#start-btn").addEventListener("click", () => { $("#title").classList.add("hidden"); placeToken(false); });
+$("#start-btn").addEventListener("click", () => { SFX.unlock(); $("#title").classList.add("hidden"); placeToken(false); });
+if (state.sound === false) setSound(false);   // бутонът помни, че звукът е спрян
 if (state.pos > 0 || state.done.length) $("#title").classList.add("hidden");
 requestAnimationFrame(() => placeToken(false));
 </script>
