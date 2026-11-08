@@ -2,7 +2,8 @@
 <html lang="bg">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EAF4FF">
 <title>Един мой работен ден</title>
 <!--
   ЕДИН МОЙ РАБОТЕН ДЕН — игра за проектор, 1. клас
@@ -34,6 +35,8 @@ body{
   font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
   background:var(--page);color:var(--ink);line-height:1.25;overflow:hidden;
 }
+body{touch-action:manipulation;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#title,#board,.stage{-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;touch-action:manipulation}
 button:focus-visible,[tabindex]:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
 .hidden{display:none !important}
@@ -232,6 +235,188 @@ dialog .list li{display:flex;justify-content:space-between;align-items:center;ga
 dialog .btn{font-size:1em;padding:.9vh 2vw}
 dialog .actions{display:flex;gap:1vw;flex-wrap:wrap;margin-top:2vh}
 dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
+
+/* =========================================================
+   МОБИЛНИ УСТРОЙСТВА
+   ========================================================= */
+
+/* --- телефон в портрет: пътеката става две колони (сутрин надолу, следобед нагоре) --- */
+@media (max-width:700px) and (orientation:portrait){
+  :root{--field:min(17vw,6.4vh)}
+  .top{padding:1.2vh 3vw;gap:2vw}
+  .top h1{display:none}
+  .captain{font-size:15px;padding:.8vh 3vw;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;border-width:2px}
+  .ops{gap:2vw;font-size:14px}
+  .ops button{width:38px;height:38px;font-size:17px}
+
+  #sky{flex-direction:row;justify-content:center;gap:8vw;padding:1vh 3vw 4.5vh}
+  .row{flex:1;flex-direction:column;justify-content:space-between;align-items:stretch;padding:1.2vh 2vw;gap:0}
+  .row-am{background:linear-gradient(180deg,var(--am),var(--noon))}
+  .row-pm{flex-direction:column-reverse;background:linear-gradient(180deg,var(--eve),var(--pm))}
+  .turn{
+    top:auto;right:auto;bottom:.6vh;left:50%;transform:translateX(-50%);
+    width:calc(8vw + 4vw + var(--field));height:4vh;
+    border:4px dashed #9BB3D1;border-top:0;border-radius:0 0 999px 999px;
+  }
+  .field{flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:2.5vw;width:auto}
+  .row-pm .field{flex-direction:row}
+  .field .lab{min-height:0;font-size:13px;text-align:right}
+  .row-pm .field .lab{text-align:left}
+  .field .n{width:max(18px,calc(var(--field)*.3));height:max(18px,calc(var(--field)*.3));font-size:max(10px,calc(var(--field)*.16));top:-4px;left:-4px}
+  .field.done .disc::after{width:max(18px,calc(var(--field)*.34));height:max(18px,calc(var(--field)*.34));font-size:max(11px,calc(var(--field)*.2));right:-5px;bottom:-5px}
+  .disc{border-width:3px;box-shadow:0 4px 0 rgba(31,42,68,.12)}
+  .field.here .disc{box-shadow:0 0 0 4px var(--sun),0 8px 18px rgba(31,42,68,.25)}
+
+  .dice{flex-direction:column;align-items:stretch;gap:1.2vh;padding:1vh 3vw max(2vh,env(safe-area-inset-bottom))}
+  .prompt{text-align:center;font-size:clamp(17px,2.4vh,22px)}
+  .pad{justify-content:space-between;gap:1.5vw}
+  .die{--d:min(13.5vw,7.5vh);border-width:3px}
+}
+
+/* --- тесен екран (телефон в портрет или в пейзаж): мисиите са на цял екран --- */
+@media (max-width:700px), (max-height:520px){
+  .overlay{padding:0}
+  .stage{width:100%;height:100%;max-height:none;border-radius:0;box-shadow:none}
+  .s-head{gap:3vw;padding:max(1.6vh,env(safe-area-inset-top)) 4vw .4vh}
+  .s-head .ico{font-size:38px}
+  .s-head .time{font-size:14px}
+  .s-head h2{font-size:21px;line-height:1.15}
+  .s-body{padding:1vh 4vw 1.5vh;font-size:18px;display:flex;flex-direction:column}
+  .s-body::before,.s-body::after{content:"";flex:1 0 0}  /* центрира късото съдържание, без да реже дългото */
+  .s-foot{padding:1vh 4vw max(1.6vh,env(safe-area-inset-bottom));gap:1vh}
+  .btn{font-size:17px;padding:1.6vh 5vw}
+  .lead{max-width:none;margin-bottom:1vh}
+  .note{font-size:.85em}
+
+  .event-card{padding:1vh 0}
+  .event-card .big{font-size:clamp(60px,16vh,120px)}
+  .event-card h2{font-size:26px;margin:1vh 0}
+  .event-card p{font-size:20px;max-width:none}
+
+  /* мисия 1 */
+  .clocks{gap:4vw;margin-bottom:1vh}
+  .clock{padding:1vh 4vw;font-size:.85em}
+  .clock b{font-size:26px}
+  .slots{flex-wrap:wrap;gap:2vw;width:100%;max-width:360px;margin:0 auto}
+  .slot{width:min(15vw,60px);font-size:24px;border-width:3px}
+  .slot.missing.sel{box-shadow:0 0 0 4px var(--sun)}
+  .numpad{gap:2vw;margin-top:1.5vh}
+  .numpad button{width:min(13vw,56px);font-size:20px}
+  .result{font-size:.9em;margin-top:1.5vh}
+
+  /* мисия 2 */
+  .zoomwrap{flex-direction:column;gap:1.5vh}
+  .zoombox{width:min(82vw,42vh);border-width:3px;border-radius:22px}
+  .zoombox .pic{font-size:min(56vw,28vh)}
+  .zoom-info{min-width:0;width:100%;text-align:center}
+  .zoom-info .name{font-size:26px}
+  .dots{justify-content:center;gap:2vw;margin-top:1vh}
+  .dots i{width:10px;height:10px}
+
+  /* мисия 3 */
+  .memtop{flex-direction:column;align-items:flex-start;gap:.3vh;margin-bottom:1vh}
+  .memgrid{gap:2.5vw;width:100%;max-width:min(92vw,55vh)}
+  .face{border-radius:14px}
+  .face.back{font-size:30px}
+  .face.back b{font-size:13px;top:5px;left:8px}
+  .face.front{font-size:38px;border-width:3px}
+  .card.ok .face.front{box-shadow:0 0 0 4px var(--mint)}
+  .legend{grid-template-columns:1fr;gap:.6vh;margin-top:1.5vh}
+
+  /* мисия 4 */
+  .phonewrap{flex-direction:column;align-items:stretch;gap:1vh}
+  .steps{max-width:none;font-size:.95em}
+  .bigtime{font-size:clamp(56px,12vh,110px);margin:.5vh 0}
+  .secret{font-size:22px;padding:1.5vh 4vw;margin-top:1.5vh}
+
+  /* мисия 5 */
+  .tf-rule{gap:2vw;flex-wrap:wrap;font-size:.8em}
+  .tf-rule span{padding:.6vh 3vw}
+  .stmt{font-size:24px;margin:2vh auto;min-height:0}
+  .verdict{font-size:34px}
+  .tf-why{max-width:none}
+
+  /* финал */
+  .finish .scene{font-size:clamp(60px,13vh,120px)}
+  .finish .fam{font-size:clamp(36px,7vh,70px)}
+  .finish h2{font-size:24px;margin:1vh 0}
+  .finish p{font-size:19px;max-width:none}
+  .recap{width:100%;margin-top:1.5vh}
+  .recap .q{flex-wrap:wrap;font-size:.95em;gap:2vw}
+  .recap button{padding:.8vh 4vw;font-size:.85em}
+  .recap .a{flex-basis:100%}
+
+  /* настройки на водещия */
+  dialog{width:100vw;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;padding:max(3vh,env(safe-area-inset-top)) 5vw max(3vh,env(safe-area-inset-bottom));font-size:16px;overflow:auto}
+  dialog .grid{grid-template-columns:1fr}
+  dialog input{padding:1.2vh 3vw;font-size:16px}
+  dialog .list li{flex-wrap:wrap;gap:1vh 2vw}
+  dialog .list li .btn{margin-left:auto}
+  dialog .actions{gap:1vh 2vw}
+  dialog .actions .btn{flex:1 1 45%;text-align:center}
+  dialog .btn{padding:1.2vh 3vw;font-size:15px}
+}
+
+/* --- телефон в портрет: бутоните в мисиите един под друг, големият е най-отдолу --- */
+@media (max-width:700px) and (orientation:portrait){
+  .s-foot{flex-direction:column;align-items:stretch}
+  .s-foot .btn{width:100%;text-align:center}
+  .s-foot .btn.primary{order:1}
+  #title{overflow:auto;padding:max(4vh,env(safe-area-inset-top)) 6vw max(4vh,env(safe-area-inset-bottom))}
+  #title .sun{font-size:clamp(56px,20vw,96px)}
+  #title h1{font-size:clamp(30px,9vw,42px);margin:1.5vh 0 .5vh}
+  #title .with{font-size:20px}
+  #title .job{font-size:16px;margin:1vh 0 2.5vh}
+  #title .cap{font-size:16px;padding:1vh 5vw;border-width:3px;margin-bottom:3vh}
+}
+
+/* --- телефон в пейзаж: всичко малко по-компактно, за да се побере пътеката --- */
+@media (max-height:520px) and (orientation:landscape){
+  .top{padding:.8vh 2vw}
+  .top h1{font-size:18px}
+  .captain{font-size:14px;padding:.5vh 2vw;border-width:2px}
+  .ops{font-size:13px}
+  .ops button{width:34px;height:34px;font-size:16px}
+  #sky{gap:3vh;padding:1vh 3vw}
+  .row{padding:1.2vh 1.6vw .6vh}
+  .turn{height:16vh;width:3vw;border-width:4px}
+  .field .lab{font-size:12px}
+  .dice{padding:.8vh 2vw 1.4vh}
+  .prompt{font-size:18px}
+  .die{--d:clamp(42px,11vh,60px);border-width:3px}
+  .s-head{padding:1vh 3vw .3vh;gap:2vw}
+  .s-head .ico{font-size:30px}
+  .s-head .time{font-size:13px}
+  .s-head h2{font-size:19px}
+  .s-body{font-size:17px;padding:.5vh 3vw 1vh}
+  .s-foot{padding:.8vh 3vw 1.4vh;justify-content:flex-end}
+  .btn{font-size:16px;padding:1.4vh 4vw}
+  .event-card .big{font-size:clamp(50px,26vh,100px)}
+  .lead{font-size:.9em;margin-bottom:.5vh}
+  .clocks{margin-bottom:.5vh}
+  .clock{padding:.6vh 3vw}
+  .clock b{font-size:22px}
+  .slots{flex-wrap:nowrap;max-width:none;gap:.8vw}
+  .slot{width:min(7vw,60px);font-size:22px}
+  .numpad{margin-top:1vh;gap:1vw}
+  .numpad button{width:min(6vw,48px);font-size:18px}
+  .result{margin-top:.5vh}
+  .zoomwrap{flex-direction:row}
+  .zoombox{width:min(40vw,48vh)}
+  .zoombox .pic{font-size:min(26vw,32vh)}
+  .zoom-info{text-align:left;flex:1;min-width:0}
+  .dots{justify-content:flex-start}
+  .memtop{flex-direction:row;align-items:center}
+  .memgrid{max-width:min(88vw,56vh);gap:1.2vw}
+  .face.back{font-size:24px}
+  .face.front{font-size:30px}
+  .phonewrap{flex-direction:row;align-items:center}
+  .bigtime{font-size:clamp(48px,22vh,90px)}
+  .stmt{font-size:22px;margin:1.5vh auto}
+  .verdict{font-size:30px}
+  .finish .scene{font-size:clamp(50px,22vh,90px)}
+  .finish .fam{font-size:clamp(30px,10vh,50px)}
+}
 
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;animation-duration:.01ms !important}
