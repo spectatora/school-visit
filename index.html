@@ -454,13 +454,19 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
   #diploma .tools .btn{flex:1 1 40%;text-align:center}
 }
 @media print{
+  /* Дипломата е 92% от ширината на листа и пази пропорцията си (в пейзаж на A4 това е ~255×180 мм при 190 мм
+     печатаема височина). Няма размери в мм, за да се смалява като едно цяло и при „Fit to page width“ в Chrome,
+     и в портрет, и на Letter. */
   @page{size:A4 landscape;margin:10mm}
-  html,body{height:auto;overflow:visible;background:#fff}
+  html,body{height:auto;margin:0;padding:0;overflow:visible;background:#fff}
   body.diploma-open > :not(#diploma){display:none !important}
-  #diploma{position:static;display:block;padding:0;background:none;overflow:visible}
+  #diploma{position:static;display:block;width:100%;padding:0;margin:0;background:none;overflow:visible}
   #diploma .tools{display:none}
-  .cert{width:auto;height:calc(100vh - 2mm);max-width:100%;margin:0 auto;box-shadow:none;break-inside:avoid;
-        -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cert{
+    width:92%;height:auto;aspect-ratio:297/210;max-height:none;max-width:none;margin:0 auto;box-shadow:none;overflow:hidden;
+    break-inside:avoid;break-after:avoid;page-break-inside:avoid;page-break-after:avoid;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
 }
 
 @media (prefers-reduced-motion:reduce){
