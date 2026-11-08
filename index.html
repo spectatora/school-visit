@@ -419,6 +419,50 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
   .finish .fam{font-size:clamp(30px,10vh,50px)}
 }
 
+/* ---------- диплома ---------- */
+#diploma{position:fixed;inset:0;z-index:40;background:rgba(31,42,68,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;padding:2vh 3vw;overflow:auto}
+.cert{
+  container-type:inline-size;background:#FFFDF3;color:var(--ink);
+  width:min(92vw,1100px,calc(80vh*297/210));aspect-ratio:297/210;
+  border:6px solid var(--ink);padding:1.2cqw;box-shadow:0 30px 80px rgba(0,0,0,.4);
+}
+.cert-in{
+  height:100%;border:3px dashed var(--sun);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2cqw 4cqw;gap:.4cqw;
+}
+.cert .ico{font-size:max(32px,8cqw);line-height:1}
+.cert .t1{font-size:max(22px,7cqw);font-weight:900;letter-spacing:.12em;line-height:1.05;margin-top:.5cqw}
+.cert .t2{font-size:max(14px,3.2cqw);font-weight:800;color:var(--green)}
+.cert .for{font-size:max(11px,2cqw);color:var(--muted);margin-top:2cqw}
+.cert .who{font-size:max(20px,5.6cqw);font-weight:900;line-height:1.1}
+.cert .school{font-size:max(12px,2.3cqw);font-weight:700;color:var(--muted)}
+.cert .why{font-size:max(11px,2.1cqw);max-width:64cqw;margin-top:2cqw;line-height:1.3}
+.cert .missions{display:flex;flex-wrap:wrap;justify-content:center;gap:.8cqw 1.2cqw;margin-top:1.5cqw;font-size:max(10px,1.9cqw);font-weight:700}
+.cert .missions span{background:var(--soft);border-radius:999px;padding:.4cqw 1.4cqw;white-space:nowrap}
+.cert .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:2cqw;width:100%;margin-top:auto;padding-top:1.5cqw;font-size:max(10px,1.8cqw);color:var(--muted)}
+.cert .foot > *{flex:1}
+.cert .foot .cap{text-align:center;font-weight:700;color:var(--ink)}
+.cert .foot .sig{text-align:right}
+.cert .foot .sig b{display:block;color:var(--ink);border-top:2px solid var(--ink);padding-top:.4cqw;margin-top:1.6cqw;font-size:max(11px,2cqw)}
+#diploma .tools{display:flex;gap:2vw;flex-wrap:wrap;justify-content:center}
+@media (max-width:700px) and (orientation:portrait){
+  .cert{width:94vw;aspect-ratio:auto;padding:10px}
+  .cert-in{padding:5vw 4vw;gap:1vh}
+  .cert .why{max-width:none}
+  .cert .foot{flex-direction:column;align-items:center;gap:1.5vh;text-align:center}
+  .cert .foot .sig{text-align:center}
+  #diploma .tools .btn{flex:1 1 40%;text-align:center}
+}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  html,body{height:auto;overflow:visible;background:#fff}
+  body.diploma-open > :not(#diploma){display:none !important}
+  #diploma{position:static;display:block;padding:0;background:none;overflow:visible}
+  #diploma .tools{display:none}
+  .cert{width:auto;height:calc(100vh - 2mm);max-width:100%;margin:0 auto;box-shadow:none;break-inside:avoid;
+        -webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;animation-duration:.01ms !important}
 }
@@ -464,15 +508,25 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
 
 <div id="overlay" class="overlay hidden"><div id="stage" class="stage"></div></div>
 
+<section id="diploma" class="hidden">
+  <div class="cert"><div class="cert-in" id="cert"></div></div>
+  <div class="tools">
+    <button class="btn ghost" id="dip-close">Назад</button>
+    <button class="btn" id="dip-print">🖨 Печат</button>
+  </div>
+</section>
+
 <dialog id="settings">
   <h2>Настройки на водещия</h2>
   <div class="grid">
     <div><label for="in-presenter">Твоето име</label><input id="in-presenter"></div>
     <div><label for="in-captain">Капитан на зара (детето)</label><input id="in-captain"></div>
+    <div><label for="in-class">Клас (за дипломата)</label><input id="in-class"></div>
   </div>
   <ul class="list" id="mission-list"></ul>
   <div class="actions">
     <button class="btn ghost" id="s-teleport">Телепорт до следващата мисия</button>
+    <button class="btn ghost" id="s-diploma">🎓 Диплома</button>
     <button class="btn ghost" id="s-full">Цял екран</button>
     <button class="btn ghost" id="s-reset">Започни отначало</button>
     <button class="btn" id="s-close">Готово</button>
@@ -489,6 +543,8 @@ const CONFIG = {
   captain: "Изабел",                          // името на детето
   job: "Програмист съм и уча компютрите да мислят.",
   familyEmoji: "👨‍👩‍👧",                      // семейството на финала
+  className: "1. клас",                      // класът, изписан на дипломата (може да се смени и от настройките)
+  school: "",                                // училището на дипломата (по желание, напр. "ОУ „Иван Вазов“")
 
   // Мисия 1 — обаждане от другия край на света
   hereCity: "Тук",
@@ -571,7 +627,7 @@ const fieldEl = n => $(`.field[data-n="${n}"]`);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function fmt(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
 
-let state = { pos: 0, done: [], started: null, captain: CONFIG.captain, presenter: CONFIG.presenter, sound: true };
+let state = { pos: 0, done: [], started: null, captain: CONFIG.captain, presenter: CONFIG.presenter, className: CONFIG.className, sound: true };
 let busy = false;
 let keyHandler = null;      // мисиите могат да прихващат клавиши
 let stageCleanup = null;    // спира таймери при затваряне на сцената
@@ -1052,6 +1108,7 @@ function showFinish() {
       </div>`,
     buttons: [
       { label: "Какво научихме?", cls: "ghost", id: "recap-btn", on: () => { $("#recap", s).classList.remove("hidden"); $("#recap-btn", s).disabled = true; } },
+      { label: "🎓 Диплома", cls: "ghost", on: showDiploma },
       { label: "Благодаря!", cls: "primary", on: closeStage },
     ],
   });
@@ -1072,6 +1129,31 @@ function showFinish() {
   document.body.appendChild(c);
 }
 
+/* ---------- диплома за помощник-програмист ---------- */
+function showDiploma() {
+  const date = new Date().toLocaleDateString("bg-BG", { day: "numeric", month: "long", year: "numeric" });
+  $("#cert").innerHTML = `
+    <div class="ico">☀️</div>
+    <div class="t1">ДИПЛОМА</div>
+    <div class="t2">за помощник-програмист</div>
+    <div class="for">се връчва на</div>
+    <div class="who">${state.className}</div>
+    ${CONFIG.school ? `<div class="school">${CONFIG.school}</div>` : ""}
+    <p class="why">за това, че заедно с ${state.presenter} изкара един цял работен ден на програмист и изпълни всички мисии:</p>
+    <div class="missions">${MISSIONS.map(m => `<span>${m.icon} ${m.title}</span>`).join("")}</div>
+    <div class="foot">
+      <div>${date}</div>
+      <div class="cap">🎲 Капитан на зара: ${state.captain}</div>
+      <div class="sig"><b>${state.presenter}, програмист</b></div>
+    </div>`;
+  $("#diploma").classList.remove("hidden");
+  document.body.classList.add("diploma-open");
+}
+function hideDiploma() {
+  $("#diploma").classList.add("hidden");
+  document.body.classList.remove("diploma-open");
+}
+
 /* ---------- настройки, клавиши, старт ---------- */
 function toggleFull() {
   if (document.fullscreenElement) document.exitFullscreen();
@@ -1079,19 +1161,23 @@ function toggleFull() {
 }
 function resetGame() {
   if (!confirm("Да започнем отначало? Прогресът ще се изтрие.")) return;
-  state = { pos: 0, done: [], started: null, captain: state.captain, presenter: state.presenter };
+  state = { pos: 0, done: [], started: null, captain: state.captain, presenter: state.presenter, className: state.className, sound: state.sound };
   save(); renderDone(); placeToken(false); setPrompt();
   $("#timer").textContent = "0:00"; $("#timer").classList.remove("late");
   settings.close();
 }
 function bindSettings() {
-  const ip = $("#in-presenter"), ic = $("#in-captain");
+  const ip = $("#in-presenter"), ic = $("#in-captain"), icl = $("#in-class");
   $("#settings-btn").addEventListener("click", () => {
-    ip.value = state.presenter; ic.value = state.captain;
+    ip.value = state.presenter; ic.value = state.captain; icl.value = state.className;
     settings.showModal();
   });
   ip.addEventListener("input", () => { state.presenter = ip.value.trim() || CONFIG.presenter; save(); renderNames(); });
   ic.addEventListener("input", () => { state.captain = ic.value.trim() || CONFIG.captain; save(); renderNames(); setPrompt(); });
+  icl.addEventListener("input", () => { state.className = icl.value.trim() || CONFIG.className; save(); });
+  $("#s-diploma").addEventListener("click", () => { settings.close(); showDiploma(); });
+  $("#dip-print").addEventListener("click", () => window.print());
+  $("#dip-close").addEventListener("click", hideDiploma);
   const list = $("#mission-list");
   MISSIONS.forEach((m, i) => {
     const li = el("li", "", `<span>${m.icon} ${m.time} ${m.title}</span>`);
@@ -1109,6 +1195,10 @@ function bindSettings() {
 }
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" || settings.open) return;
+  if (!$("#diploma").classList.contains("hidden")) {
+    if (e.key === "Escape") hideDiploma();
+    return;
+  }
   const titleOpen = !$("#title").classList.contains("hidden");
   if (titleOpen) {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#start-btn").click(); }
