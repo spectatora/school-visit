@@ -21,6 +21,7 @@
     T              телепорт до следващата мисия (ако времето не стига)
     F              цял екран
     M              звук включен/изключен
+    Интервал / R   старт-пауза / отначало на таймера, когато има такъв на екрана
 -->
 <style>
 :root{
@@ -236,9 +237,35 @@ h1,h2,h3{font-weight:800;letter-spacing:-.01em;margin:0}
 .steps{margin:0;padding-left:1.2em;max-width:40ch}
 .steps li{margin:.6vh 0}
 .phonewrap{display:flex;gap:3vw;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.bigtime{font-size:clamp(60px,15vh,170px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;text-align:center;flex:1}
-.bigtime.over{color:var(--red)}
+.tslot{display:flex;justify-content:center;flex:1}
 .secret{margin-top:2vh;background:var(--noon);border-radius:var(--radius);padding:2vh 2.5vw;font-size:clamp(26px,5vh,60px);font-weight:900;text-align:center}
+
+/* визуален таймер (кръг, който се изпразва) — ползва се в „Развален телефон“ и в събитията със secs */
+.ctimer{display:flex;flex-direction:column;align-items:center;gap:1.6vh;--ring:clamp(150px,30vh,340px)}
+.ctimer .ring{position:relative;width:var(--ring);height:var(--ring)}
+.ctimer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ctimer circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ctimer .bg{stroke:var(--line)}
+.ctimer .fg{stroke:var(--mint);transition:stroke-dashoffset .2s linear,stroke .4s}
+.ctimer.warn .fg{stroke:var(--sun)}
+.ctimer.hurry .fg{stroke:var(--coral)}
+.ctimer .digits{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--ring)*.32);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.ctimer.hurry .digits{color:var(--red);animation:tpulse 1s ease-in-out infinite}
+.ctimer.over .ring{animation:flash .5s ease-in-out 4}
+.ctimer.over .digits{color:var(--red);font-size:calc(var(--ring)*.2);animation:none}
+@keyframes tpulse{50%{transform:scale(1.12)}}
+@keyframes flash{50%{filter:brightness(.7);transform:scale(.96)}}
+.ctimer .ctl{display:flex;gap:1.2vw;flex-wrap:wrap;justify-content:center}
+.ctimer .ctl .btn{font-size:clamp(18px,3vh,32px);padding:1.2vh 2.6vw}
+.ctimer .ctl .go{background:var(--green)}
+.ctimer.running .ctl .go{background:var(--ink)}
+.ctimer .hint{color:var(--muted);font-size:clamp(12px,1.8vh,18px);font-weight:600}
+@media (hover:none){.ctimer .hint{display:none}}
+.event-card .tslot{margin-top:1.5vh}
+.event-card.timed .big{font-size:clamp(50px,11vh,120px)}
+.event-card.timed h2{font-size:clamp(26px,5vh,56px);margin:.8vh 0}
+.event-card.timed p{font-size:clamp(20px,3.4vh,40px)}
+.event-card.timed .ctimer{--ring:clamp(130px,26vh,280px)}
 
 /* мисия 5: вярно или грешно */
 .stmt{font-size:clamp(30px,6vh,70px);font-weight:800;text-align:center;margin:3vh auto;max-width:28ch;min-height:2.4em}
@@ -368,7 +395,9 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
   /* мисия 4 */
   .phonewrap{flex-direction:column;align-items:stretch;gap:1vh}
   .steps{max-width:none;font-size:.95em}
-  .bigtime{font-size:clamp(56px,12vh,110px);margin:.5vh 0}
+  .ctimer{--ring:min(62vw,30vh)}
+  .event-card.timed .ctimer{--ring:min(52vw,26vh)}
+  .ctimer .ctl .btn{font-size:17px;padding:1.4vh 5vw}
   .secret{font-size:22px;padding:1.5vh 4vw;margin-top:1.5vh}
 
   /* мисия 5 */
@@ -466,7 +495,12 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
   .face.back{font-size:24px}
   .face.front{font-size:30px}
   .phonewrap{flex-direction:row;align-items:center}
-  .bigtime{font-size:clamp(48px,22vh,90px)}
+  .ctimer{--ring:min(44vh,30vw);gap:.8vh}
+  .ctimer .ctl .btn{font-size:15px;padding:1vh 3vw}
+  .event-card.timed{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2vw;text-align:left}
+  .event-card.timed .tslot{grid-row:1/span 3;grid-column:2;margin:0}
+  .event-card.timed .ctimer{--ring:min(52vh,30vw)}
+  .event-card.timed p{margin:0}
   .stmt{font-size:22px;margin:1.5vh auto}
   .verdict{font-size:30px}
   .finish .scene{font-size:clamp(50px,22vh,90px)}
@@ -602,7 +636,7 @@ dialog .keys{color:var(--muted);font-size:.8em;margin-top:2vh}
     <button class="btn ghost" id="s-reset">Започни отначало</button>
     <button class="btn" id="s-close">Готово</button>
   </div>
-  <p class="keys">Клавиши: 1–6 зар, Enter продължи, Esc обратно към пътеката, T телепорт, F цял екран, M звук. „Отвори“ до мисия я показва за проба, без да мести фигурката.</p>
+  <p class="keys">Клавиши: 1–6 зар, Enter продължи, Esc обратно към пътеката, T телепорт, F цял екран, M звук, интервал/R за таймера. „Отвори“ до мисия я показва за проба, без да мести фигурката.</p>
 </dialog>
 
 <script>
@@ -661,15 +695,15 @@ const CONFIG = {
     { q: "Какво прави един програмист?", a: "Пише код и учи компютрите да мислят." },
   ],
 
-  // Събития по пътеката (полетата между мисиите)
+  // Събития по пътеката (полетата между мисиите). secs: N добавя голям визуален таймер към събитието.
   events: {
-    1:  { icon: "☕", title: "Кафе!", text: "Всички се протягаме като току-що събудени." },
-    2:  { icon: "📡", title: "Падна интернетът!", text: "Замръзваме за 5 секунди… и „рестарт“!" },
+    1:  { icon: "☕", title: "Кафе!", text: "Всички се протягаме като току-що събудени.", secs: 10 },
+    2:  { icon: "📡", title: "Падна интернетът!", text: "Замръзваме за 5 секунди… и „рестарт“!", secs: 5 },
     4:  { icon: "🍝", title: "Звъни колега от Италия", text: "Всички казваме „Ciao!“ шепнешком." },
-    5:  { icon: "🏃", title: "Шефът иска нещо спешно", text: "Три клякания и обратно на място." },
+    5:  { icon: "🏃", title: "Шефът иска нещо спешно", text: "Три клякания и обратно на място.", secs: 15 },
     7:  { icon: "⚡", title: "Свърших работата рано", text: "Капитанът хвърля зара още веднъж!" },
     8:  { icon: "🐛", title: "Бъг в програмата!", text: "Всички се почесваме по главата и казваме „Хммм…“" },
-    10: { icon: "🥪", title: "Обедна почивка", text: "Кажи на съседа по чин какво обичаш за обяд." },
+    10: { icon: "🥪", title: "Обедна почивка", text: "Кажи на съседа по чин какво обичаш за обяд.", secs: 30 },
     11: { icon: "🤖", title: "Роботът иска да се научи", text: "Повторете след капитана: „Здравей, робот!“" },
     13: { icon: "🌍", title: "Среща с колеги от пет държави", text: "Hello! Ciao! Hola! Bonjour! Hallo! — шепнешком." },
     14: { icon: "🚀", title: "Проектът е готов!", text: "Броим 3, 2, 1 и скачаме като ракета." },
@@ -759,6 +793,15 @@ const SFX = (() => {
       tone(c, { f: 1047, t: .48, d: .7, type: "triangle", g: .2 });
       tone(c, { f: 659, t: .48, d: .7, type: "triangle", g: .12 });
       tone(c, { f: 392, t: .48, d: .7, type: "sine", g: .12 });
+    },
+    tick() {                                                // последните секунди на таймера
+      const c = get(); if (!c) return;
+      tone(c, { f: 1320, d: .06, type: "square", g: .07 });
+    },
+    alarm() {                                               // времето изтече
+      const c = get(); if (!c) return;
+      [0, .22, .44].forEach(t => { tone(c, { f: 880, t, d: .16, type: "square", g: .14 }); tone(c, { f: 1109, t, d: .16, type: "square", g: .1 }); });
+      tone(c, { f: 660, t: .7, d: .5, type: "triangle", g: .16 });
     },
     finish() {                                              // финал с конфети
       const c = get(); if (!c) return;
@@ -927,10 +970,59 @@ function openMission(idx, rehearsal = false) {
 }
 function showEvent(n) {
   const ev = CONFIG.events[n];
-  openStage({
-    body: `<div class="event-card"><div class="big">${ev.icon}</div><h2>${ev.title}</h2><p>${ev.text}</p></div>`,
+  const s = openStage({
+    body: `<div class="event-card ${ev.secs ? "timed" : ""}"><div class="big">${ev.icon}</div><h2>${ev.title}</h2><p>${ev.text}</p>${ev.secs ? `<div class="tslot" id="tslot"></div>` : ""}</div>`,
     buttons: [{ label: "Продължаваме", cls: "primary", on: closeStage }],
   });
+  if (ev.secs) mountTimer($("#tslot", s), ev.secs);
+}
+
+/* ---------- визуален таймер ----------
+   mountTimer(контейнер, секунди) рисува кръг, който се изпразва, с големи цифри и бутони Старт/Пауза и Отначало.
+   Водещият може и с клавиши: интервал = старт/пауза, R = отначало. Спира сам при затваряне на сцената. */
+function mountTimer(slot, seconds) {
+  const C = 2 * Math.PI * 45;
+  slot.innerHTML = `
+    <div class="ctimer">
+      <div class="ring">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bg" cx="50" cy="50" r="45"/><circle class="fg" cx="50" cy="50" r="45" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+        <div class="digits"></div>
+      </div>
+      <div class="ctl"><button class="btn go">▶ Старт</button><button class="btn ghost re">↺ Отначало</button></div>
+      <div class="hint">Интервал = старт/пауза · R = отначало</div>
+    </div>`;
+  const root = $(".ctimer", slot), fg = $(".fg", root), dig = $(".digits", root), go = $(".go", root), re = $(".re", root);
+  const show = n => seconds >= 60 ? fmt(n) : String(n);
+  let left = seconds, endAt = null, iv = null, lastWhole = seconds;
+  function render() {
+    const whole = Math.max(0, Math.ceil(left));
+    dig.textContent = left <= 0 ? "⏰ Край!" : show(whole);
+    fg.style.strokeDashoffset = C * (1 - Math.max(left, 0) / seconds);
+    const r = left / seconds;
+    root.classList.toggle("warn", r <= .5 && r > .2 && left > 5);
+    root.classList.toggle("hurry", left > 0 && (r <= .2 || (left <= 5 && seconds > 10)));   // късите таймери не почват червени
+    if (whole !== lastWhole) { lastWhole = whole; if (left > 0 && whole <= 5) SFX.tick(); }
+  }
+  function tick() {
+    left = (endAt - Date.now()) / 1000;
+    if (left <= 0) { left = 0; stop(); root.classList.add("over"); go.disabled = true; SFX.alarm(); }
+    render();
+  }
+  function start() { if (iv || left <= 0) return; endAt = Date.now() + left * 1000; iv = setInterval(tick, 100); root.classList.add("running"); go.textContent = "⏸ Пауза"; }
+  function stop() { if (iv) { clearInterval(iv); iv = null; } root.classList.remove("running"); go.textContent = "▶ Старт"; }
+  function toggle() { if (iv) stop(); else start(); }
+  function reset() { stop(); left = seconds; lastWhole = seconds; root.classList.remove("over", "warn", "hurry"); go.disabled = false; render(); }
+  go.addEventListener("click", toggle);
+  re.addEventListener("click", reset);
+  render();
+  const prevKeys = keyHandler, prevCleanup = stageCleanup;
+  keyHandler = e => {
+    if (e.code === "Space") { toggle(); return true; }
+    if (e.code === "KeyR") { reset(); return true; }
+    return prevKeys ? prevKeys(e) : false;
+  };
+  stageCleanup = () => { stop(); if (prevCleanup) prevCleanup(); };
+  return { start, stop, toggle, reset };
 }
 
 /* ---------- мисия 1: липсващите числа ---------- */
@@ -1101,7 +1193,6 @@ function missionMemory(m, done) {
 
 /* ---------- мисия 4: развален телефон ---------- */
 function missionPhone(m, done) {
-  let t = CONFIG.phoneSeconds, iv = null;
   const s = openStage({
     head: m,
     body: `
@@ -1112,25 +1203,16 @@ function missionPhone(m, done) {
           <li>Всеки го предава шепнешком на следващия.</li>
           <li>Последният го казва на глас!</li>
         </ol>
-        <div class="bigtime" id="bigtime">${fmt(t)}</div>
+        <div class="tslot" id="tslot"></div>
       </div>
       <p class="note">В работата си говоря с колеги от различни държави — затова е важно да се разбираме ясно.</p>
       <div class="secret hidden" id="secret">${CONFIG.phrase}</div>`,
     buttons: [
-      { label: "Старт", cls: "ghost", id: "ph-start", on: toggle },
       { label: "Покажи изречението", cls: "ghost", id: "ph-show", on: () => { $("#secret", s).classList.remove("hidden"); $("#ph-show", s).disabled = true; } },
-      { label: "Мисията е изпълнена", cls: "primary", on: () => { stop(); done(); } },
+      { label: "Мисията е изпълнена", cls: "primary", on: done },
     ],
   });
-  const big = $("#bigtime", s), startBtn = $("#ph-start", s);
-  function tick() {
-    t--;
-    big.textContent = fmt(Math.max(t, 0));
-    if (t <= 0) { stop(); big.textContent = "Край!"; big.classList.add("over"); startBtn.disabled = true; }
-  }
-  function stop() { if (iv) { clearInterval(iv); iv = null; } startBtn.textContent = "Старт"; }
-  function toggle() { if (iv) stop(); else { iv = setInterval(tick, 1000); startBtn.textContent = "Пауза"; } }
-  stageCleanup = stop;
+  mountTimer($("#tslot", s), CONFIG.phoneSeconds);
 }
 
 /* ---------- мисия 5: вярно или грешно ---------- */
